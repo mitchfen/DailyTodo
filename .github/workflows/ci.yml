@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [ "main" ]
+
+concurrency:
+  group: "build-and-test-${{ github.head_ref }}"
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v6
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Publish .NET App
+      run: dotnet publish DailyTodo.csproj -c Release -o publish
+
+    - name: Build Docker image
+      run: docker build -t dailytodo:test .
+
+    - name: Run container
+      run: |
+        docker run -d --name dailytodo -p 8080:80 -e "DAILY_TASKS=CITestTask1" dailytodo:test
+        sleep 10
+
+    - name: Test site availability
+      run: |
+        HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/)
+        echo "Response Code: $HTTP_CODE"
+        if [ "$HTTP_CODE" -ne 200 ]; then
+          echo "Error: Site returned $HTTP_CODE"
+          docker logs dailytodo
+          exit 1
+        fi
+
+    - name: Verify Config Injection
+      run: |
+        # Fetch appsettings.json and check if it contains our injected task
+        CONTENT=$(curl -s http://localhost:8080/appsettings.json)
+        echo "Config Content: $CONTENT"
+        if echo "$CONTENT" | grep -q "CITestTask1"; then
+          echo "Success: Environment variable injection worked."
+        else
+          echo "Error: Config injection failed."
+          exit 1
+        fi

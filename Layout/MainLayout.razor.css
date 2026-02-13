@@ -1,0 +1,25 @@
+.page {
+    position: absolute; /* Changed to absolute to allow main to center more easily */
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    justify-content: center; /* Center horizontally */
+    align-items: center; /* Center vertically */
+    overflow-y: auto; /* Allow scrolling if content overflows */
+}
+
+.centered-main-content {
+    display: flex;
+    justify-content: center; /* Center content within main */
+    align-items: center; /* Center content vertically within main */
+    flex-grow: 1; /* Allow it to take available space */
+    width: 100%; /* Take full width */
+}
+
+article.content {
+    max-width: 800px; /* Limit content width for readability */
+    width: 100%;
+    padding: 20px; /* Add some padding */
+}
