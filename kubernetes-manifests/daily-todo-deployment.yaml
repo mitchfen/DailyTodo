@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: daily-todo-deployment
+  labels:
+    app: daily-todo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: daily-todo
+  template:
+    metadata:
+      labels:
+        app: daily-todo
+    spec:
+      containers:
+      - name: daily-todo
+        image: ghcr.io/mitchfen/dailytodo:latest 
+        ports:
+        - containerPort: 80
+        env:
+        - name: DailyTasks__0
+          value: "Brush Teeth"
+        - name: DailyTasks__1
+          value: "Take Medication"
+        - name: DailyTasks__2
+          value: "Workout"
+        - name: DailyTasks__3
+          value: "Vacuum"
+        resources:
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+          requests:
+            memory: "1Gi"
+            cpu: "250m"

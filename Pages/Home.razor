@@ -1,0 +1,98 @@
+﻿@page "/"
+@inject AppConfig AppConfig
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Daily Todo</PageTitle>
+
+<div class="daily-todo-container">
+
+
+    @if (TodoItems == null)
+    {
+        <p><em>Loading tasks...</em></p>
+    }
+    else if (!TodoItems.Any())
+    {
+        <p>No daily tasks configured.</p>
+    }
+    else
+    {
+        <ul class="todo-list">
+            @foreach (var item in TodoItems)
+            {
+                <li class="todo-item @(item.IsCompleted ? "completed" : "")">
+                    <input type="checkbox" @bind="item.IsCompleted" @bind:after="SaveTodoState" />
+                    <span>@item.Text</span>
+                </li>
+            }
+        </ul>
+        <div class="progress-summary">
+            <p>Progress: @CompletedCount / @TodoItems.Count</p>
+            @if (CompletedCount == TodoItems.Count && TodoItems.Any())
+            {
+                <p class="all-completed">All tasks completed for today!</p>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private List<TodoItem>? TodoItems;
+    private int CompletedCount => TodoItems?.Count(item => item.IsCompleted) ?? 0;
+
+    private const string LocalStorageKey = "DailyTodoState";
+    private const string LocalStorageDateKey = "DailyTodoDate";
+
+    protected override async Task OnInitializedAsync()
+    {
+        TodoItems = AppConfig.DailyTasks.Select(text => new TodoItem { Text = text, IsCompleted = false }).ToList();
+        await LoadTodoState();
+    }
+
+    private async Task LoadTodoState()
+    {
+        var lastSavedDateString = await JSRuntime.InvokeAsync<string>("localStorage.getItem", LocalStorageDateKey);
+        var today = DateTime.Today;
+
+        if (DateTime.TryParse(lastSavedDateString, out var lastSavedDate) && lastSavedDate == today)
+        {
+            // Same day, load progress
+            var savedStateJson = await JSRuntime.InvokeAsync<string>("localStorage.getItem", LocalStorageKey);
+            if (!string.IsNullOrEmpty(savedStateJson))
+            {
+                var savedStates = System.Text.Json.JsonSerializer.Deserialize<List<TodoItem>>(savedStateJson);
+                if (savedStates != null)
+                {
+                    // Update current TodoItems with saved completion status, matching by Text
+                    foreach (var item in TodoItems)
+                    {
+                        var savedItem = savedStates.FirstOrDefault(s => s.Text == item.Text);
+                        if (savedItem != null)
+                        {
+                            item.IsCompleted = savedItem.IsCompleted;
+                        }
+                    }
+                }
+            }
+        }
+        else
+        {
+            // New day or no saved date, reset tasks and save today's date
+            foreach (var item in TodoItems)
+            {
+                item.IsCompleted = false;
+            }
+            await JSRuntime.InvokeVoidAsync("localStorage.setItem", LocalStorageDateKey, today.ToString("yyyy-MM-dd"));
+            await SaveTodoState(); // Save initial (reset) state
+        }
+    }
+
+    private async Task SaveTodoState()
+    {
+        if (TodoItems != null)
+        {
+            var json = System.Text.Json.JsonSerializer.Serialize(TodoItems);
+            await JSRuntime.InvokeVoidAsync("localStorage.setItem", LocalStorageKey, json);
+        }
+    }
+}
