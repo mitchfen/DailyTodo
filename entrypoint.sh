@@ -19,6 +19,7 @@ else
         # Create temp file
         TMP_FILE=$(mktemp)
         jq --argjson tasks "$TASKS" '.DailyTasks = $tasks' "$CONFIG_FILE" > "$TMP_FILE" && mv "$TMP_FILE" "$CONFIG_FILE"
+        chmod 644 "$CONFIG_FILE"
     else
         echo "DAILY_TASKS environment variable not found. Using default appsettings.json."
     fi
