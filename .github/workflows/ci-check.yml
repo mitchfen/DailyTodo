@@ -3,8 +3,10 @@ name: Build and Test
 on:
   pull_request:
     branches: [ "main" ]
-  push:
-    branches: [ "initial-app" ]
+
+concurrency:
+  group: "build-and-test-${{ github.head_ref }}"
+  cancel-in-progress: true
 
 jobs:
   build-and-test:
@@ -26,9 +28,7 @@ jobs:
 
     - name: Run container
       run: |
-        docker run -d --name dailytodo -p 8080:80 
-          -e "DAILY_TASKS=CITestTask1" 
-          dailytodo:test
+        docker run -d --name dailytodo -p 8080:80 -e "DAILY_TASKS=CITestTask1" dailytodo:test
         sleep 10
 
     - name: Test site availability
