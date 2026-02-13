@@ -15,6 +15,8 @@ jobs:
   build:
     name: Build and publish
     runs-on: ubuntu-latest
+    env:
+      imageName: ghcr.io/mitchfen/dailytodo:latest
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -37,5 +39,8 @@ jobs:
       - name: Login to ghcr.io
         run: echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-      - name: Build and push image
-        run: docker build -t ghcr.io/mitchfen/dailytodo:latest .
+      - name: Build image
+        run: docker build -t ${{ env.imageName }} .
+
+      - name: Push image
+        run: docker push ${{ env.imageName }} 
