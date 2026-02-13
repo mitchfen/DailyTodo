@@ -4,7 +4,7 @@ metadata:
   name: daily-todo-config
   namespace: dailytodo
 data:
-  DAILY_TASKS: "Brush Teeth,Take Medication,Workout,Vacuum"
+  DAILY_TASKS: "Task 1,Task 2,Task 3"
 
 ---
 apiVersion: v1
