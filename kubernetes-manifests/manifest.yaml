@@ -1,0 +1,80 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: daily-todo-config
+  namespace: dailytodo
+data:
+  DAILY_TASKS: "Brush Teeth,Take Medication,Workout,Vacuum"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: dailytodo
+  name: daily-todo-service
+spec:
+  type: ClusterIP 
+  selector:
+    app: daily-todo 
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: daily-todo-deployment
+  namespace: dailytodo
+  labels:
+    app: daily-todo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: daily-todo
+  template:
+    metadata:
+      labels:
+        app: daily-todo
+    spec:
+      containers:
+      - name: daily-todo
+        image: ghcr.io/mitchfen/dailytodo:latest 
+        ports:
+        - containerPort: 80
+        envFrom:
+        - configMapRef:
+            name: daily-todo-config
+        resources:
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+          requests:
+            memory: "1Gi"
+            cpu: "250m"
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: dailytodo-ingress
+  namespace: dailytodo
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+spec:
+  rules:
+  - host: dailytodo.home
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: daily-todo-service
+            port:
+              number: 80
