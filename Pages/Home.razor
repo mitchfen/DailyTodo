@@ -51,6 +51,7 @@
 
     private async Task LoadTodoState()
     {
+        if (TodoItems == null) return;
         var lastSavedDateString = await JSRuntime.InvokeAsync<string>("localStorage.getItem", LocalStorageDateKey);
         var today = DateTime.Today;
 
