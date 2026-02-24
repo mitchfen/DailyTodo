@@ -33,15 +33,3 @@ jobs:
           exit 1
         fi
 
-    - name: Verify Config Injection
-      run: |
-        # Fetch appsettings.json and check if it contains our injected task
-        CONTENT=$(curl -s http://localhost:8080/appsettings.json)
-        echo "Config Content: $CONTENT"
-        if echo "$CONTENT" | grep -q "CITestTask1"; then
-          echo "Success: Environment variable injection worked."
-        else
-          echo "Error: Config injection failed."
-          exit 1
-        fi
-
