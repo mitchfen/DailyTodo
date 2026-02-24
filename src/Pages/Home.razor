@@ -1,0 +1,58 @@
+@page "/"
+@inject AppConfig AppConfig
+@inject TodoService TodoService
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+
+<PageTitle>Daily Todo</PageTitle>
+
+<div class="daily-todo-container">
+
+
+    @if (TodoItems == null)
+    {
+        <p><em>Loading tasks...</em></p>
+    }
+    else if (!TodoItems.Any())
+    {
+        <p>No daily tasks configured.</p>
+    }
+    else
+    {
+        <ul class="todo-list">
+            @foreach (var item in TodoItems)
+            {
+                <li class="todo-item @(item.IsCompleted ? "completed" : "")">
+                    <input type="checkbox" @bind="item.IsCompleted" @bind:after="() => SaveTodoState(item)" />
+                    <span>@item.Text</span>
+                </li>
+            }
+        </ul>
+        <div class="progress-summary">
+            <p>Progress: @CompletedCount / @TodoItems.Count</p>
+            @if (CompletedCount == TodoItems.Count && TodoItems.Any())
+            {
+                <p class="all-completed">All tasks completed for today!</p>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private List<TodoItem>? TodoItems;
+    private int CompletedCount => TodoItems?.Count(item => item.IsCompleted) ?? 0;
+
+    protected override void OnInitialized()
+    {
+        var today = DateTime.Today;
+        TodoItems = AppConfig.DailyTasks.Select(text => new TodoItem 
+        { 
+            Text = text, 
+            IsCompleted = TodoService.GetState(today, text) 
+        }).ToList();
+    }
+
+    private void SaveTodoState(TodoItem item)
+    {
+        TodoService.SetState(DateTime.Today, item.Text, item.IsCompleted);
+    }
+}

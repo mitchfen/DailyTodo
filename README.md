@@ -1,43 +1,44 @@
 ## About
 
-DailyTodo is simple application designed for tracking tasks that need to be done each day.  
-Task state is saved in the browser and resets each night.  
+DailyTodo is a simple application designed for tracking tasks that need to be done each day.  
+Task state is persisted in a backend JSON file and resets each night.  
 
 ### Example 
 <img src="./screenshot.png" width="600">
 
 ## Implementation details
-*   **Blazor WebAssembly:** Built with .NET 10 for a modern, client-side web experience.
-*   **Containerized:** Runs on a minimal Nginx Alpine image.
-*   **Dynamic Configuration:** Tasks are loaded from environment variables (mapped from Kubernetes ConfigMaps) at runtime, injecting them into `appsettings.json` via a custom entrypoint script. This allows for updating tasks without rebuilding the image.
-*   **Kubernetes Ready:** Includes manifests for Deployment, Service, Ingress, and ConfigMap.
+*   **Blazor Server:** Built with .NET 10 for a modern, server-side interactive experience.
+*   **Persistent State:** Task completion is stored in a JSON file in the `/data` directory, which can be mounted as a volume.
+*   **Containerized:** Multi-stage builds using official .NET 10 runtime images.
+*   **Dynamic Configuration:** Tasks are loaded from environment variables (`DAILY_TASKS`) or `appsettings.json`, allowing for flexible configuration without rebuilding the image.
+*   **Kubernetes Ready:** Includes manifests for Deployment, Service, Ingress, PersistentVolumeClaim, and ConfigMap.
 
 ## Build and Deploy
 
-### 1. Publish Application
-Publish the Blazor WASM app to the `publish/` directory
+### 1. Run Locally (dotnet)
+You can run the application directly using the dotnet CLI:
 ```bash
-dotnet publish DailyTodo.csproj -c Release -o publish
+dotnet run --project src/DailyTodo.csproj
 ```
 
 ### 2. Build Docker Image
-Build the image using the `Dockerfile` (which copies the published assets and the entrypoint script)
+Build the multi-stage image (which handles restoration and publishing internally):
 ```bash
-docker build -t ghcr.io/mitchfen/dailytodo:latest .
+docker build -t dailytodo:latest .
 ```
 
 ### 3. Run Locally (Docker)
 Run the container to test locally. Access at `http://localhost:5000`
 ```bash
-docker run -p 5000:80 --rm -it ghcr.io/mitchfen/dailytodo:latest
+docker run -p 5000:80 --rm -it dailytodo:latest
 ```
 *Note: You can pass environment variables to test the config injection:*
 ```bash
-docker run -p 5000:80 -e "DAILY_TASKS=Test Task 1,Test Task 2" --rm -it ghcr.io/mitchfen/dailytodo:latest
+docker run -p 5000:80 -e "DAILY_TASKS=Test Task 1,Test Task 2" --rm -it dailytodo:latest
 ```
 
 ### 4. Deploy to Kubernetes
-Apply the manifests to your cluster
+Apply the manifests to your cluster.
 ```bash
 kubectl apply -f kubernetes-manifests
 ```
