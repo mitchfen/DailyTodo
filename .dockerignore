@@ -1,0 +1,11 @@
+**/.git
+**/.github
+**/bin
+**/obj
+**/publish
+data/
+README.md
+screenshot.png
+LICENSE
+Dockerfile
+.dockerignore

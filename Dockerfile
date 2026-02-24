@@ -1,20 +1,27 @@
-# dotnet publish must be run before building this image, and the output should be in ./publish/wwwroot/
-FROM nginx:alpine
+# Build Stage
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /source
 
-COPY nginx.conf /etc/nginx/nginx.conf
-COPY entrypoint.sh /entrypoint.sh
+# Copy csproj and restore dependencies
+COPY src/*.csproj src/
+RUN dotnet restore src/DailyTodo.csproj
 
-RUN apk update \
-    && apk add --no-cache jq \
-    && apk upgrade \
-    && rm -rf /var/cache/apk/* \
-    && chmod +x /entrypoint.sh
+# Copy remaining source code and publish
+COPY . .
+WORKDIR /source/src
+RUN dotnet publish DailyTodo.csproj -c Release -o /app/publish
 
-COPY ./publish/wwwroot/ /usr/local/webapp/nginx/html
+# Runtime Stage
+FROM mcr.microsoft.com/dotnet/aspnet:10.0
+WORKDIR /app
 
+# Copy published output from build stage
+COPY --from=build /app/publish .
+
+# The app expects port 80
 EXPOSE 80
+ENV ASPNETCORE_URLS=http://+:80
 
-ENTRYPOINT ["/entrypoint.sh"]
-CMD ["nginx", "-g", "daemon off;"]
+ENTRYPOINT ["dotnet", "DailyTodo.dll"]
 
 LABEL org.opencontainers.image.description="Daily todo application"
