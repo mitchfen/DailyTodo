@@ -5,13 +5,15 @@ namespace DailyTodo
 {
     public class TodoService
     {
+        private readonly AppConfig _appConfig;
         private readonly string _filePath = "data/todo-state.json";
         // Key is date string (yyyy-MM-dd), Value is a map of TaskText -> IsCompleted
         private ConcurrentDictionary<string, ConcurrentDictionary<string, bool>> _dailyState = new();
         private readonly object _fileLock = new();
 
-        public TodoService()
+        public TodoService(AppConfig appConfig)
         {
+            _appConfig = appConfig;
             LoadFromFile();
         }
 
@@ -37,7 +39,7 @@ namespace DailyTodo
 
         public void CleanupOldDates()
         {
-            var today = DateTime.Today.ToString("yyyy-MM-dd");
+            var today = _appConfig.GetToday().ToString("yyyy-MM-dd");
             var keysToRemove = _dailyState.Keys.Where(k => k != today).ToList();
             
             if (keysToRemove.Any())
