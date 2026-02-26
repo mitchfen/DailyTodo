@@ -43,7 +43,7 @@
 
     protected override void OnInitialized()
     {
-        var today = DateTime.Today;
+        var today = AppConfig.GetToday();
         TodoItems = AppConfig.DailyTasks.Select(text => new TodoItem 
         { 
             Text = text, 
@@ -53,6 +53,6 @@
 
     private void SaveTodoState(TodoItem item)
     {
-        TodoService.SetState(DateTime.Today, item.Text, item.IsCompleted);
+        TodoService.SetState(AppConfig.GetToday(), item.Text, item.IsCompleted);
     }
 }

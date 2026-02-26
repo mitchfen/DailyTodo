@@ -10,7 +10,7 @@ Task state is persisted in a backend JSON file and resets each night.
 *   **Blazor Server:** Built with .NET 10 for a modern, server-side interactive experience.
 *   **Persistent State:** Task completion is stored in a JSON file in the `/data` directory, which can be mounted as a volume.
 *   **Containerized:** Multi-stage builds using official .NET 10 runtime images.
-*   **Dynamic Configuration:** Tasks are loaded from environment variables (`DAILY_TASKS`) or `appsettings.json`, allowing for flexible configuration without rebuilding the image.
+*   **Dynamic Configuration:** Tasks are loaded from environment variables (`DAILY_TASKS`) or `appsettings.json`, and the reset timezone can be configured via `TIMEZONE` (e.g., `America/New_York`). This allows for flexible configuration without rebuilding the image.
 *   **Kubernetes Ready:** Includes manifests for Deployment, Service, Ingress, PersistentVolumeClaim, and ConfigMap.
 
 ## Build and Deploy
@@ -34,7 +34,10 @@ docker run -p 5000:80 --rm -it dailytodo:latest
 ```
 *Note: You can pass environment variables to test the config injection:*
 ```bash
-docker run -p 5000:80 -e "DAILY_TASKS=Test Task 1,Test Task 2" --rm -it dailytodo:latest
+docker run -p 5000:80 \
+  -e "DAILY_TASKS=Test Task 1,Test Task 2" \
+  -e "TIMEZONE=America/Los_Angeles" \
+  --rm -it dailytodo:latest
 ```
 
 ### 4. Deploy to Kubernetes

@@ -7,15 +7,14 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-builder.Services.AddSingleton<TodoService>();
-
-// Register AppConfig
+// Register AppConfig first
 builder.Services.AddSingleton(sp =>
 {
     var configuration = sp.GetRequiredService<IConfiguration>();
     
     // Check for comma-separated environment variable first (legacy support)
     var dailyTasksEnv = Environment.GetEnvironmentVariable("DAILY_TASKS");
+    var timeZoneEnv = Environment.GetEnvironmentVariable("TIMEZONE");
     List<string> tasks;
 
     if (!string.IsNullOrWhiteSpace(dailyTasksEnv))
@@ -29,8 +28,14 @@ builder.Services.AddSingleton(sp =>
         tasks = configuration.GetSection("DailyTasks").Get<List<string>>() ?? new List<string>();
     }
 
-    return new AppConfig { DailyTasks = tasks };
+    var timeZone = !string.IsNullOrWhiteSpace(timeZoneEnv) 
+        ? timeZoneEnv 
+        : configuration["TimeZone"] ?? "UTC";
+
+    return new AppConfig { DailyTasks = tasks, TimeZone = timeZone };
 });
+
+builder.Services.AddSingleton<TodoService>();
 
 var app = builder.Build();
 
