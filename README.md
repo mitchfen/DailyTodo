@@ -1,8 +1,10 @@
 ## About
 
-Momentum is a simple application for tracking tasks I want/need to do every morning. It allows you to keep tasks individual or group them together in habit stacks. I deploy this in my homelab and make it available on the network so any device in my home can be used to update the status. 
+Momentum is a simple application for tracking tasks I need to do every day. It automatically resets each night.
 
-### Example 
+Tasks can be individual or grouped them together in habit stacks. I deploy this in my homelab and make it available on the network so any device in my home can be used to update the status. 
+
+### Screenshot 
 <img src="./screenshot.png" width="600">
 
 ## Key Features
@@ -43,51 +45,3 @@ TIMEZONE="America/Los_Angeles"
 - **Named habit stack:** `"My Morning: Step 1 + Step 2"` → named stack with steps
 - **Comma-separated:** Multiple tasks in `DAILY_TASKS` are split by comma
 
-## Build and Deploy
-
-### 1. Run Locally (native Go)
-Build and run the binary directly:
-```bash
-cd src
-go build -o momentum
-./momentum
-```
-Access at `http://localhost:80` (or set `PORT` env var for a different port)
-
-### 2. Build Docker Image
-Multi-stage build produces a tiny, scratch-based image:
-```bash
-docker build -t momentum:latest .
-```
-
-### 3. Run Locally (Docker)
-Run the container and access at `http://localhost:8080`
-```bash
-docker run -p 8080:80 \
-  -v momentum-data:/app/data \
-  --rm -it momentum:latest
-```
-
-With custom configuration:
-```bash
-docker run -p 8080:80 \
-  -e "DAILY_TASKS=Morning: Coffee + Meditate,Workout,Read" \
-  -e "TIMEZONE=America/Chicago" \
-  -v momentum-data:/app/data \
-  --rm -it momentum:latest
-```
-
-### 4. Deploy to Kubernetes
-Apply the manifests to your cluster:
-```bash
-kubectl apply -f kubernetes-manifest.yaml
-```
-
-This creates:
-- `momentum` namespace
-- ConfigMap with `DAILY_TASKS` and `TIMEZONE`
-- PersistentVolumeClaim for `/app/data`
-- Deployment with resource limits
-- ClusterIP Service for internal access
-
-Configure your own tasks by editing the ConfigMap in the manifest before applying.
